@@ -1,0 +1,92 @@
+#SPDX-License-Identifier: GPL-3.0-only
+---
+- name: "Create Traefik System Group"
+  ansible.builtin.group:
+    name: '{{ traefik_name }}'
+    system: true
+
+- name: "Create Traefik System User"
+  ansible.builtin.user:
+    name: '{{ traefik_name }}'
+    system: true
+    shell: '/bin/false'
+    group: '{{ traefik_name }}'
+    create_home: false
+
+- name: "Download Version"
+  register: download_version
+  ansible.builtin.get_url:
+    url: "{{ traefik_url }}_linux_amd64.tar.gz"
+    dest: "{{ _download }}"
+    checksum: "sha256:{{ traefik_url }}_checksums.txt"
+
+- name: "Create Bin Folder"
+  ansible.builtin.file:
+    path: "{{ traefik_opt }}"
+    state: directory
+    owner: '{{ traefik_name }}'
+    group: '{{ traefik_name }}'      
+
+- name: "Expand Version"
+  when: download_version.changed
+  ansible.builtin.unarchive:
+    src: "{{ _download }}/{{ traefik_name }}_{{ traefik_version }}_linux_amd64.tar.gz"
+    dest: "{{ traefik_opt }}"
+    remote_src: true      
+
+- name: "Change Folder Permissions"
+  when: download_version.changed
+  notify: traefik_restart
+  ansible.builtin.file:
+    path: "{{ traefik_opt }}"
+    state: directory
+    recurse: yes
+    owner: '{{ traefik_name }}'
+    group: '{{ traefik_name }}'
+
+- name: "Create Config Folder"
+  ansible.builtin.file:
+    path: '{{ traefik_conf_d }}'
+    state: directory
+    owner: '{{ traefik_name }}'
+    group: '{{ traefik_name }}'      
+    
+- name: "Template Traefik Service"
+  register: template_traefik_service
+  ansible.builtin.template:
+    src: '../templates/{{ traefik_name }}-service.j2'
+    dest: '{{ systemd_conf }}/{{ traefik_name }}.service'
+    owner: root
+    group: root
+    mode: '0644'
+    backup: false
+
+- name: "Enable Traefik Service"
+  when: template_traefik_service.changed
+  ansible.builtin.systemd:
+    name: '{{ traefik_name }}.service'
+    daemon_reload: true
+    enabled: true
+
+- name: "Template Traefik Config"
+  notify: traefik_restart
+  ansible.builtin.template:
+    src: '../templates/{{ traefik_name }}-config.j2'
+    dest: '{{ traefik_etc }}/{{ traefik_name }}.yml'
+    owner: '{{ traefik_name }}'
+    group: '{{ traefik_name }}'
+    mode: "0644"
+    backup: false
+
+- name: "Template Traefik Routing Configs"
+  ansible.builtin.copy:
+    content: '{{ item.content | to_nice_yaml(indent=2) }}'
+    dest: '{{ traefik_conf_d }}/routing-{{ item.name }}-config.yml'
+    owner: '{{ traefik_name }}'
+    group: '{{ traefik_name }}'
+    mode: "0644"
+  loop:
+    - { name: 'http', content: '{{ traefik_routing_http }}' }
+    - { name: 'tcp', content: '{{ traefik_routing_tcp }}' }
+    - { name: 'udp', content: '{{ traefik_routing_udp }}' }
+    - { name: 'tls', content: '{{ traefik_routing_tls }}' }

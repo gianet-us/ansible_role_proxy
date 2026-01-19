@@ -1,0 +1,3 @@
+tests/hosts.yml
+.ansible/
+.vscode/settings.json

@@ -1,0 +1,147 @@
+#SPDX-License-Identifier: GPL-3.0-only
+---
+
+## Install configuration
+traefik_name: 'traefik'
+traefik_version: 'v3.6.7'
+traefik_opt: '/opt/{{ traefik_name }}'
+traefik_etc: '/etc/{{ traefik_name }}'
+traefik_url: 'https://github.com/{{ traefik_name }}/{{ traefik_name }}/releases/download/{{ traefik_version }}/{{ traefik_name }}_{{ traefik_version }}'
+traefik_conf_d: '{{ traefik_etc }}/conf.d'
+
+### Global configuration
+
+traefik_global_checkNewVersion: 'false'
+traefik_global_sendAnonymousUsage: 'false'
+
+### EntryPoints configuration
+
+traefik_entrypoints:
+  web:
+    address: ':80'
+  websecure:
+    address: ':443'
+  # ovpn:
+  #   address: ':1194/udp'
+  # rdp:
+  #   address: ':3389/tcp'
+
+### API and dashboard configuration
+
+traefik_api: false
+traefik_api_basepath: '/'
+traefik_api_dashboard: 'false'
+traefik_api_debug: 'false'
+traefik_api_disabledashboardad: 'false'
+traefik_api_insecure: 'false'
+
+### Providers configuration
+
+traefik_providers_providersThrottleDuration: '2s'
+
+## File Provider
+traefik_providers_file: true
+traefik_providers_file_debugloggeneratedtemplate: 'false'
+## directory and filename are mutual exclusive.
+traefik_providers_file_directory: '/etc/traefik/conf.d/'
+# traefik_providers_file_filename: ''
+traefik_providers_file_watch: 'true'
+
+
+### TLS configuration
+
+# traefik_certificatesResolvers:
+#   myresolver:
+#     acme:
+#       email: your-email@example.com
+#       storage: acme.json
+#       httpChallenge:
+#         entryPoint: web
+
+### Log configuration
+
+# traefik_log_filePath: '/opt/traefik/traefik.log'
+traefik_log_maxSize: '100'
+traefik_log_maxAge: '0'
+traefik_log_maxBackups: '0'
+traefik_log_compress: 'false'
+
+traefik_log_format: 'common'
+traefik_log_level: 'ERROR'
+traefik_log_noColor: 'false'
+
+### Metrics configuration
+
+traefik_metrics_addInternals: 'false'
+traefik_metrics_prometheus: false
+traefik_metrics_prometheus_addEntryPointsLabels: 'true'
+traefik_metrics_prometheus_addRoutersLabels: 'false'
+traefik_metrics_prometheus_addServicesLabels: 'true'
+traefik_metrics_prometheus_buckets:
+  - 0.1
+  - 0.3
+  - 1.2
+  - 5.0
+traefik_metrics_prometheus_manualRouting: 'false'
+traefik_metrics_prometheus_entryPoint: 'traefik'
+traefik_metrics_prometheus_headerLabels:
+  useragent: User-Agent
+
+### Routing configuration
+# Remove '{}' before adding your own configurations.
+
+## HTTP configuration
+traefik_routing_http: {}
+  # http:
+  #   routers:
+  #     my-router:
+  #       entryPoints:
+  #         - "web"
+  #         - "websecure"
+  #       rule: "Host(`example.com`) && Path(`/api`)"
+  #       priority: 10
+  #       service: my-service
+  #   services:
+  #     my-service:
+  #       loadBalancer:
+  #         servers:
+  #           - url: http://1.1.1.1:3000
+  #         passHostHeader: true
+
+## TCP configuration
+traefik_routing_tcp: {}
+  # tcp:
+  #   routers:
+  #     my-tcp-router:
+  #       entryPoints:
+  #         - "rdp"
+  #       rule: "ClientIP(`10.76.105.11`)"
+  #       priority: 10
+  #       service: my-service
+  #   services:
+  #     my-service:
+  #       loadBalancer:
+  #         servers:
+  #         - address: "127.0.0.1:3389"
+              
+## UDP configuration
+traefik_routing_udp: {}
+  # udp:
+  #   routers:
+  #     my-udp-router:
+  #       entryPoints:
+  #         - "ovpn"
+  #       service: my-service
+  #   services:
+  #     my-service:
+  #       loadBalancer:
+  #         servers:
+  #           - address: "127.0.0.1:1194"      
+
+## TLS configuration
+traefik_routing_tls: {}
+  # tls:
+  #   options:
+  #     default:
+  #       minVersion: VersionTLS13
+  #       sniStrict: true

@@ -1,0 +1,21 @@
+galaxy_info:
+  role_name: "ansible_role_proxy"
+  author: "Luciano Giacchetta"
+  description: "Complete Proxy Server Role"
+  company: "Giacchetta Networks LLC"
+  issue_tracker_url: "https://gianet.us/engineering/ansible_role_proxy/issues"
+  license: "GPL-3.0-only"
+  min_ansible_version: "2.12"
+  platforms:
+  - name: "Debian"
+    versions:
+    - "all"
+  - name: "Ubuntu"
+    versions:
+    - "all"
+  galaxy_tags:
+    - "proxy"
+    - "reverse"
+    - "traefik"
+
+dependencies: []

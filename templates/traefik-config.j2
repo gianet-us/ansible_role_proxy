@@ -1,0 +1,92 @@
+# {{ ansible_managed }}
+
+################################################################
+# Global configuration
+################################################################
+
+global:
+  checkNewVersion: {{ traefik_global_checkNewVersion }}
+  sendAnonymousUsage: {{ traefik_global_sendAnonymousUsage }}
+
+################################################################
+# EntryPoints configuration
+################################################################
+
+entryPoints:
+  {{ traefik_entrypoints | to_nice_yaml(indent=2) | indent(2,False) }}
+
+################################################################
+# API and dashboard configuration
+################################################################
+
+{% if traefik_api %}
+api:
+  basepath: {{ traefik_api_basepath }}
+  dashboard: {{ traefik_api_dashboard }}
+  debug: {{ traefik_api_debug }}
+  disabledashboardad: {{ traefik_api_disabledashboardad }}
+  insecure: {{ traefik_api_insecure }}
+{% endif %}
+
+################################################################
+# Providers configuration
+################################################################
+
+providers:
+  providersThrottleDuration: {{ traefik_providers_providersThrottleDuration }}
+{% if traefik_providers_file %}
+  file:
+    debugloggeneratedtemplate: {{ traefik_providers_file_debugloggeneratedtemplate }}
+    directory: {{ traefik_providers_file_directory }}
+{% if traefik_providers_file_filename is defined %}
+    filename: {{ traefik_providers_file_filename }}
+{% endif %}
+    watch: {{ traefik_providers_file_watch }}
+{% endif %}
+
+
+################################################################
+# TLS configuration
+################################################################
+
+{% if traefik_certificatesResolvers is defined %}
+certificatesResolvers:
+  {{ traefik_certificatesResolvers | to_nice_yaml(indent=2) | indent(2,False) }}
+{% endif %}
+
+################################################################
+# Log configuration
+################################################################
+
+log:
+{% if traefik_log_filePath is defined %}
+  filePath: {{ traefik_log_filePath }}
+  maxSize: {{ traefik_log_maxSize }}
+  maxAge: {{ traefik_log_maxAge }}
+  maxBackups: {{ traefik_log_maxBackups }}
+  compress: {{ traefik_log_compress }}  
+{% endif %}
+  format: {{ traefik_log_format }}
+  level: {{ traefik_log_level }}
+  noColor: {{ traefik_log_noColor }}
+
+################################################################
+# Metrics configuration
+################################################################
+
+metrics:
+  addInternals: {{ traefik_metrics_addInternals }}
+{% if traefik_metrics_prometheus %}
+  prometheus:
+    addEntryPointsLabels: {{ traefik_metrics_prometheus_addEntryPointsLabels }}
+    addRoutersLabels: {{ traefik_metrics_prometheus_addRoutersLabels }}
+    addServicesLabels: {{ traefik_metrics_prometheus_addServicesLabels }}
+    buckets: 
+      {{ traefik_metrics_prometheus_buckets | to_nice_yaml(indent=6) | indent(6,False) }}
+    manualRouting: {{ traefik_metrics_prometheus_manualRouting }}
+    entryPoint: {{ traefik_metrics_prometheus_entryPoint }}
+{% if traefik_metrics_prometheus_headerLabels is defined %}
+    headerLabels:
+      {{ traefik_metrics_prometheus_headerLabels | to_nice_yaml(indent=6) | indent(6,False) }}
+{% endif %}
+{% endif %}
