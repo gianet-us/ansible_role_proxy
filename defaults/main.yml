@@ -84,8 +84,8 @@ traefik_metrics_prometheus_buckets:
   - 5.0
 traefik_metrics_prometheus_manualRouting: 'false'
 traefik_metrics_prometheus_entryPoint: 'traefik'
-traefik_metrics_prometheus_headerLabels:
-  useragent: User-Agent
+# traefik_metrics_prometheus_headerLabels:
+#   useragent: User-Agent
 
 ### Routing configuration
 # Remove '{}' before adding your own configurations.
