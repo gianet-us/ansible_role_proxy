@@ -6,6 +6,9 @@ on:
   schedule:
     - cron: '0 6 * * 1'  # Every Monday at 06:00 UTC
   workflow_dispatch:
+  pull_request:
+    branches:
+      - main
 
 jobs:
   update-version:
@@ -46,13 +49,13 @@ jobs:
         working-directory: ansible_role_proxy
         run: molecule test
 
-      # - name: Commit and push
-      #   if: steps.check.outputs.needs_update == 'true'
-      #   working-directory: ansible_role_proxy
-      #   run: |
-      #     git config user.name "giabot"
-      #     git config user.email "bot@mail.gianet.us"
-      #     git remote set-url origin "https://giabot:${{ secrets.GITEA_TOKEN }}@gianet.us/engineering/ansible_role_reverse.git"
-      #     git add defaults/main.yml
-      #     git commit -m "patch: update traefik_version to ${{ steps.check.outputs.latest }}"
-      #     git push origin main
+      - name: Commit and push
+        if: steps.check.outputs.needs_update == 'true' && github.ref == 'refs/heads/main'
+        working-directory: ansible_role_proxy
+        run: |
+          git config user.name "giabot"
+          git config user.email "bot@mail.gianet.us"
+          git remote set-url origin "https://giabot:${{ secrets.GITEA_TOKEN }}@gianet.us/engineering/ansible_role_reverse.git"
+          git add defaults/main.yml
+          git commit -m "patch: update traefik_version to ${{ steps.check.outputs.latest }}"
+          git push origin main
