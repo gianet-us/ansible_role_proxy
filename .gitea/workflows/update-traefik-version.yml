@@ -47,7 +47,7 @@ jobs:
       - name: Run Molecule tests
         if: steps.check.outputs.needs_update == 'true'
         working-directory: ansible_role_proxy
-        run: molecule test
+        run: ~/.local/bin/molecule test
 
       - name: Commit and push
         if: steps.check.outputs.needs_update == 'true' && github.ref == 'refs/heads/main'
