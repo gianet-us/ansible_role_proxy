@@ -14,6 +14,9 @@ jobs:
   update-version:
     runs-on: fedora-latest
     steps:
+      - name: Add ~/.local/bin to PATH
+        run: echo "$HOME/.local/bin" >> "$GITEA_PATH"
+
       - name: Checkout
         uses: actions/checkout@v6
         with:
@@ -47,7 +50,7 @@ jobs:
       - name: Run Molecule tests
         if: steps.check.outputs.needs_update == 'true'
         working-directory: ansible_role_proxy
-        run: ~/.local/bin/molecule test
+        run: molecule test
 
       - name: Commit and push
         if: steps.check.outputs.needs_update == 'true' && github.ref == 'refs/heads/main'
