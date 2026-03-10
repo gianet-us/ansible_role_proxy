@@ -1,5 +1,6 @@
 galaxy_info:
   role_name: "ansible_role_proxy"
+  namespace: "gianet"
   author: "Luciano Giacchetta"
   description: "Complete Proxy Server Role"
   company: "Giacchetta Networks LLC"
