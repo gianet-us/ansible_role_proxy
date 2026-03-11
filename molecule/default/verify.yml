@@ -1,0 +1,23 @@
+#SPDX-License-Identifier: GPL-3.0-only
+---
+- name: Verify
+  hosts: all
+  tasks:
+    - name: Check traefik binary
+      ansible.builtin.stat:
+        path: /opt/traefik/traefik
+      register: traefik_binary
+
+    - name: Assert traefik binary is executable
+      ansible.builtin.assert:
+        that:
+          - traefik_binary.stat.exists
+          - traefik_binary.stat.executable
+
+    - name: Gather service facts
+      ansible.builtin.service_facts:
+
+    - name: Assert traefik service is present
+      ansible.builtin.assert:
+        that:
+          - "'traefik.service' in ansible_facts.services"

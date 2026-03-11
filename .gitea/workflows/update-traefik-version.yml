@@ -1,0 +1,77 @@
+#SPDX-License-Identifier: GPL-3.0-only
+---
+name: Update Traefik Version
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'  # Every Monday at 06:00 UTC
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  update-version:
+    runs-on: fedora-latest
+    steps:
+      - name: Add ~/.local/bin to PATH
+        run: echo "$HOME/.local/bin" >> "$GITEA_PATH"
+
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          path: ansible_role_proxy
+
+      - name: Check versions
+        id: check
+        working-directory: ansible_role_proxy
+        run: |
+          LATEST=$(curl -sf https://api.github.com/repos/traefik/traefik/releases/latest | jq -r '.tag_name')
+          CURRENT=$(grep "^traefik_version:" defaults/main.yml | sed "s/traefik_version: '//;s/'//")
+          echo "latest=$LATEST" >> "$GITHUB_OUTPUT"
+          if [ "$LATEST" = "$CURRENT" ]; then
+            echo "needs_update=false" >> "$GITHUB_OUTPUT"
+            echo "Already on latest: $CURRENT"
+          else
+            echo "needs_update=true" >> "$GITHUB_OUTPUT"
+            echo "Update available: $CURRENT -> $LATEST"
+          fi
+
+      - name: Install Molecule
+        if: steps.check.outputs.needs_update == 'true'
+        run: pip install ansible molecule molecule-plugins[podman]
+
+      - name: Install Ansible collections
+        if: steps.check.outputs.needs_update == 'true'
+        run: ansible-galaxy collection install containers.podman
+
+      - name: Update traefik_version
+        if: steps.check.outputs.needs_update == 'true'
+        working-directory: ansible_role_proxy
+        run: |
+          sed -i "s/^traefik_version: '.*'$/traefik_version: '${{ steps.check.outputs.latest }}'/" defaults/main.yml
+          UPDATED=$(grep "^traefik_version:" defaults/main.yml | sed "s/traefik_version: '//;s/'//")
+          if [ "$UPDATED" != "${{ steps.check.outputs.latest }}" ]; then
+            echo "::error::Failed to update traefik_version (expected '${{ steps.check.outputs.latest }}', got '$UPDATED')"
+            exit 1
+          fi
+          echo "Verified: traefik_version updated to $UPDATED"
+
+      - name: Run Molecule tests
+        if: steps.check.outputs.needs_update == 'true'
+        working-directory: ansible_role_proxy
+        run: molecule test
+
+      - name: Commit and push
+        if: steps.check.outputs.needs_update == 'true' && github.ref == 'refs/heads/main'
+        working-directory: ansible_role_proxy
+        run: |
+          git config user.name "giabot"
+          git config user.email "bot@mail.gianet.us"
+          git remote set-url origin "https://giabot:${{ secrets.GITEA_TOKEN }}@gianet.us/engineering/ansible_role_reverse.git"
+          git add defaults/main.yml
+          git commit -m "patch: update traefik_version to ${{ steps.check.outputs.latest }}"
+          git tag "${{ steps.check.outputs.latest }}"
+          git tag -f latest
+          git push origin main "${{ steps.check.outputs.latest }}"
+          git push -f origin latest
