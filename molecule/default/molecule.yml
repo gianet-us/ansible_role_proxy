@@ -25,6 +25,22 @@ platforms:
     systemd: always
     command: /usr/sbin/init
 
+  - name: ubuntu-latest
+    image: docker.io/library/ubuntu:latest
+    pre_build_image: false
+    dockerfile: Dockerfile
+    privileged: true
+    systemd: always
+    command: /usr/sbin/init
+
+  - name: ubuntu-jammy
+    image: docker.io/library/ubuntu:jammy
+    pre_build_image: false
+    dockerfile: Dockerfile
+    privileged: true
+    systemd: always
+    command: /usr/sbin/init
+
 provisioner:
   name: ansible
   env:

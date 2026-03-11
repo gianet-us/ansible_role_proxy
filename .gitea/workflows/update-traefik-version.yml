@@ -50,6 +50,12 @@ jobs:
         working-directory: ansible_role_proxy
         run: |
           sed -i "s/^traefik_version: '.*'$/traefik_version: '${{ steps.check.outputs.latest }}'/" defaults/main.yml
+          UPDATED=$(grep "^traefik_version:" defaults/main.yml | sed "s/traefik_version: '//;s/'//")
+          if [ "$UPDATED" != "${{ steps.check.outputs.latest }}" ]; then
+            echo "::error::Failed to update traefik_version (expected '${{ steps.check.outputs.latest }}', got '$UPDATED')"
+            exit 1
+          fi
+          echo "Verified: traefik_version updated to $UPDATED"
 
       - name: Run Molecule tests
         if: steps.check.outputs.needs_update == 'true'
@@ -65,4 +71,7 @@ jobs:
           git remote set-url origin "https://giabot:${{ secrets.GITEA_TOKEN }}@gianet.us/engineering/ansible_role_reverse.git"
           git add defaults/main.yml
           git commit -m "patch: update traefik_version to ${{ steps.check.outputs.latest }}"
-          git push origin main
+          git tag "${{ steps.check.outputs.latest }}"
+          git tag -f latest
+          git push origin main "${{ steps.check.outputs.latest }}"
+          git push -f origin latest
