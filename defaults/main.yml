@@ -3,7 +3,7 @@
 
 ## Install configuration
 traefik_name: 'traefik'
-traefik_version: 'v3.6.7'
+traefik_version: 'v3.6.10'
 traefik_opt: '/opt/{{ traefik_name }}'
 traefik_etc: '/etc/{{ traefik_name }}'
 traefik_url: 'https://github.com/{{ traefik_name }}/{{ traefik_name }}/releases/download/{{ traefik_version }}/{{ traefik_name }}_{{ traefik_version }}'
