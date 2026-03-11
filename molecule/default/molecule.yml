@@ -10,8 +10,9 @@ driver:
 
 platforms:
   - name: instance
-    image: docker.io/geerlingguy/docker-debian12-ansible:latest
-    pre_build_image: true
+    image: docker.io/library/debian:stable
+    pre_build_image: false
+    dockerfile: Dockerfile
     privileged: true
     systemd: always
     command: /usr/sbin/init
