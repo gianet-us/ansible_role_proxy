@@ -25,5 +25,16 @@ provisioner:
     converge: converge.yml
     verify: verify.yml
 
+scenario:
+  test_sequence:
+    - dependency
+    - destroy
+    - syntax
+    - create
+    - converge
+    - idempotence
+    - verify
+    - destroy
+
 verifier:
   name: ansible
