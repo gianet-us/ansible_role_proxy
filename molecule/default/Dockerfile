@@ -8,7 +8,6 @@ RUN apt-get update && \
       dbus \
       ca-certificates && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/* && \
-    mkdir -p /root/.ansible/tmp
+    rm -rf /var/lib/apt/lists/*
 
 CMD ["/usr/sbin/init"]
