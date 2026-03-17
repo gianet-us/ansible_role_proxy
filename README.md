@@ -1,5 +1,5 @@
-ansible_role_proxy
-==================
+# Ansible Role: Proxy
+
 
 Complete Proxy Server Role based on Traefik. This role installs and configures Traefik as a reverse proxy on Debian and Ubuntu systems.
 
