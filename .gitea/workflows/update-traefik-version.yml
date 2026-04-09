@@ -27,7 +27,7 @@ jobs:
         working-directory: ansible_role_proxy
         run: |
           LATEST=$(curl -sf https://api.github.com/repos/traefik/traefik/releases/latest | jq -r '.tag_name')
-          if ! [[ "$LATEST" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          if ! [[ "$LATEST" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "::error::Refusing to bump to non-stable version '$LATEST'"
             exit 1
           fi          
