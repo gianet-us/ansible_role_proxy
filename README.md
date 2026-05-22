@@ -16,7 +16,7 @@ The following variables are defined in `defaults/main.yml`:
 | Variable | Description | Default Value |
 |----------|-------------|---------------|
 | `traefik_name` | Name of the service and user | `traefik` |
-| `traefik_version` | Traefik version to install | `v3.6.7` |
+| `traefik_version` | Traefik version to install | [latest](https://github.com/traefik/traefik/releases/latest) |
 | `traefik_opt` | Installation directory | `/opt/{{ traefik_name }}` |
 | `traefik_etc` | Configuration directory | `/etc/{{ traefik_name }}` |
 | `traefik_conf_d` | Dynamic configuration directory | `{{ traefik_etc }}/conf.d` |
@@ -73,4 +73,4 @@ Author Information
 
 + Luciano Giacchetta
 + Giacchetta Networks LLC
-+ https://gianet.us/engineering/ansible_role_proxy
++ https://github.com/gianet-us/ansible_role_proxy

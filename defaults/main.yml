@@ -43,7 +43,7 @@ traefik_providers_providersThrottleDuration: '2s'
 traefik_providers_file: true
 traefik_providers_file_debugloggeneratedtemplate: 'false'
 ## directory and filename are mutual exclusive.
-traefik_providers_file_directory: '/etc/traefik/conf.d/'
+traefik_providers_file_directory: '{{ traefik_conf_d }}'
 # traefik_providers_file_filename: ''
 traefik_providers_file_watch: 'true'
 
@@ -54,13 +54,13 @@ traefik_providers_file_watch: 'true'
 #   myresolver:
 #     acme:
 #       email: your-email@example.com
-#       storage: acme.json
+#       storage: "{{ traefik_etc }}/acme.json"
 #       httpChallenge:
 #         entryPoint: web
 
 ### Log configuration
 
-# traefik_log_filePath: '/opt/traefik/traefik.log'
+# traefik_log_filePath: '{{ traefik_opt }}/traefik.log'
 traefik_log_maxSize: '100'
 traefik_log_maxAge: '0'
 traefik_log_maxBackups: '0'
