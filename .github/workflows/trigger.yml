@@ -18,8 +18,8 @@ jobs:
 
       # This step will ONLY run if any of the previous steps failed
       - name: Notify on Failure
-        # if: failure()
-        if: always()
+        if: failure()
+        # if: always()
         uses: dawidd6/action-send-mail@v17
         with:
           server_address: ${{ secrets.PUBLIC_MAIL_SERVER }}
