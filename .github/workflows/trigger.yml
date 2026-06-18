@@ -32,4 +32,4 @@ jobs:
           from: "Github Actions <${{ secrets.PUBLIC_MAIL_USERNAME }}>"
           body: |
             The job was automatically triggered by a ${{ github.event_name }} event
-            View the run here: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_number }}
+            View the run here: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
