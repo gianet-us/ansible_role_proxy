@@ -51,6 +51,16 @@
     owner: '{{ traefik_name }}'
     group: '{{ traefik_name }}'      
     
+- name: "Create acme.json"
+  ansible.builtin.file:
+    path: '{{ traefik_etc }}/acme.json'
+    state: touch
+    owner: '{{ traefik_name }}'
+    group: '{{ traefik_name }}'
+    mode: '0600'
+    modification_time: preserve
+    access_time: preserve
+
 - name: "Template Traefik Service"
   register: template_traefik_service
   ansible.builtin.template:

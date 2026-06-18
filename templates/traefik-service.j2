@@ -19,7 +19,7 @@ Restart=always
 WatchdogSec=1s
 
 # allow writing of acme.json
-ReadWritePaths={{ traefik_etc }}/acme.json
+ReadWritePaths=-{{ traefik_etc }}/acme.json
 # depending on log and entrypoint configuration, you may need to allow writing to other paths, too
 
 # limit number of processes in this unit

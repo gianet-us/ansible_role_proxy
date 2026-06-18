@@ -6,6 +6,11 @@ on:
   schedule:
     - cron: '30 6 * * *'  # Every day at 06:30 UTC
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Specific Traefik version to test and tag (e.g. v3.7.3). Leave empty to use latest."
+        required: false
+        default: ''
   pull_request:
     branches:
       - main
@@ -26,11 +31,19 @@ jobs:
         id: check
         working-directory: ansible_role_proxy
         run: |
-          LATEST=$(curl -sf https://api.github.com/repos/traefik/traefik/releases/latest | jq -r '.tag_name')
-          if ! [[ "$LATEST" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::Refusing to bump to non-stable version '$LATEST'"
-            exit 1
-          fi          
+          if [ -n "${{ inputs.version }}" ]; then
+            LATEST="${{ inputs.version }}"
+            if ! [[ "$LATEST" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "::error::Refusing to tag non-stable version '$LATEST'"
+              exit 1
+            fi
+          else
+            LATEST=$(curl -sf https://api.github.com/repos/traefik/traefik/releases/latest | jq -r '.tag_name')
+            if ! [[ "$LATEST" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "::error::Refusing to bump to non-stable version '$LATEST'"
+              exit 1
+            fi
+          fi
           CURRENT=$(grep "^traefik_version:" defaults/main.yml | sed "s/traefik_version: '//;s/'//")
           echo "latest=$LATEST" >> "$GITHUB_OUTPUT"
           if [ "$LATEST" = "$CURRENT" ]; then
@@ -72,7 +85,7 @@ jobs:
         run: |
           git config user.name "giabot"
           git config user.email "bot@mail.gianet.us"
-          git remote set-url origin "https://giabot:${{ secrets.GITEA_TOKEN }}@gianet.us/engineering/ansible_role_reverse.git"
+          git remote set-url origin "https://giabot:${{ secrets.GITEA_TOKEN }}@gianet.us/engineering/ansible_role_proxy.git"
           git add defaults/main.yml
           git commit -m "patch: update traefik_version to ${{ steps.check.outputs.latest }}"
           git tag "${{ steps.check.outputs.latest }}"
