@@ -1,4 +1,6 @@
 #SPDX-License-Identifier: GPL-3.0-only
 ---
-_download: '/tmp'
 systemd_conf: '/etc/systemd/system'
+_traefik_release: '{{ traefik_name }}-{{ traefik_version }}-linux-{{ traefik_arch }}'
+_traefik_version_dir: '{{ traefik_opt }}/{{ _traefik_release }}'
+_traefik_tarball: '{{ _traefik_version_dir }}.tar.gz'

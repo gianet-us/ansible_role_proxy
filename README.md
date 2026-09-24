@@ -3,6 +3,8 @@
 
 Complete Proxy Server Role based on Traefik. This role installs and configures Traefik as a reverse proxy on Debian and Ubuntu systems.
 
+Traefik is installed as a versioned directory under `traefik_opt` (e.g. `/opt/traefik/traefik-v3.7.13-linux-amd64/`), with `{{ traefik_opt }}/traefik` kept as a symlink to the active version's binary. This keeps the install idempotent — `traefik_restart` only fires when `traefik_version` actually changes — and old versioned downloads beyond `traefik_keep_versions` are pruned automatically.
+
 Requirements
 ------------
 
@@ -17,6 +19,8 @@ The following variables are defined in `defaults/main.yml`:
 |----------|-------------|---------------|
 | `traefik_name` | Name of the service and user | `traefik` |
 | `traefik_version` | Traefik version to install | [latest](https://github.com/traefik/traefik/releases/latest) |
+| `traefik_arch` | Release architecture to download | `amd64` |
+| `traefik_keep_versions` | Number of old versioned installs to keep after pruning | `1` |
 | `traefik_opt` | Installation directory | `/opt/{{ traefik_name }}` |
 | `traefik_etc` | Configuration directory | `/etc/{{ traefik_name }}` |
 | `traefik_conf_d` | Dynamic configuration directory | `{{ traefik_etc }}/conf.d` |

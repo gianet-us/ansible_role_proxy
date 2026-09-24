@@ -3,9 +3,21 @@
 - name: Verify
   hosts: all
   tasks:
-    - name: Check traefik binary
+    - name: Check traefik active-binary symlink
       ansible.builtin.stat:
         path: /opt/traefik/traefik
+      register: traefik_symlink
+
+    - name: Assert traefik symlink points at a versioned binary
+      ansible.builtin.assert:
+        that:
+          - traefik_symlink.stat.exists
+          - traefik_symlink.stat.islnk
+          - traefik_symlink.stat.lnk_source is match('/opt/traefik/traefik-.*-linux-.*')
+
+    - name: Check traefik versioned binary
+      ansible.builtin.stat:
+        path: '{{ traefik_symlink.stat.lnk_source }}'
       register: traefik_binary
 
     - name: Assert traefik binary is executable
@@ -13,6 +25,31 @@
         that:
           - traefik_binary.stat.exists
           - traefik_binary.stat.executable
+
+    - name: Check versioned tarball
+      ansible.builtin.find:
+        paths: /opt/traefik
+        patterns: 'traefik-*-linux-*.tar.gz'
+        file_type: file
+        recurse: false
+      register: traefik_tarballs
+
+    - name: Assert versioned tarball was kept under /opt/traefik
+      ansible.builtin.assert:
+        that:
+          - traefik_tarballs.matched > 0
+
+    - name: Check for leftover downloads in /tmp
+      ansible.builtin.find:
+        paths: /tmp
+        patterns: 'traefik*'
+        recurse: false
+      register: traefik_tmp_leftovers
+
+    - name: Assert nothing was downloaded to /tmp
+      ansible.builtin.assert:
+        that:
+          - traefik_tmp_leftovers.matched == 0
 
     - name: Gather service facts
       ansible.builtin.service_facts:

@@ -13,36 +13,92 @@
     group: '{{ traefik_name }}'
     create_home: false
 
-- name: "Download Version"
-  register: download_version
-  ansible.builtin.get_url:
-    url: "{{ traefik_url }}_linux_amd64.tar.gz"
-    dest: "{{ _download }}"
-    checksum: "sha256:{{ traefik_url }}_checksums.txt"
-
 - name: "Create Bin Folder"
   ansible.builtin.file:
     path: "{{ traefik_opt }}"
     state: directory
     owner: '{{ traefik_name }}'
-    group: '{{ traefik_name }}'      
+    group: '{{ traefik_name }}'
+
+- name: "Download Version"
+  register: download_version
+  ansible.builtin.get_url:
+    url: "{{ traefik_url }}_linux_{{ traefik_arch }}.tar.gz"
+    dest: "{{ _traefik_tarball }}"
+    checksum: "sha256:{{ traefik_url }}_checksums.txt"
+    owner: '{{ traefik_name }}'
+    group: '{{ traefik_name }}'
+    mode: '0644'
+
+- name: "Create Version Folder"
+  ansible.builtin.file:
+    path: "{{ _traefik_version_dir }}"
+    state: directory
+    owner: '{{ traefik_name }}'
+    group: '{{ traefik_name }}'
 
 - name: "Expand Version"
-  when: download_version.changed
+  # Only when check mode itself prevented the download (fresh host + --check):
+  # nothing to unarchive yet, and unarchive can't no-op past a missing src the
+  # way get_url does. On a real run, `creates` alone drives idempotency, so a
+  # manually removed binary still gets repaired even if the tarball didn't change.
+  when: not (ansible_check_mode and download_version is changed)
+  register: expand_version
   ansible.builtin.unarchive:
-    src: "{{ _download }}/{{ traefik_name }}_{{ traefik_version }}_linux_amd64.tar.gz"
-    dest: "{{ traefik_opt }}"
-    remote_src: true      
+    src: "{{ _traefik_tarball }}"
+    dest: "{{ _traefik_version_dir }}"
+    remote_src: true
+    creates: "{{ _traefik_version_dir }}/{{ traefik_name }}"
 
 - name: "Change Folder Permissions"
-  when: download_version.changed
-  notify: traefik_restart
+  when: expand_version is changed
   ansible.builtin.file:
-    path: "{{ traefik_opt }}"
+    path: "{{ _traefik_version_dir }}"
     state: directory
     recurse: yes
     owner: '{{ traefik_name }}'
     group: '{{ traefik_name }}'
+
+- name: "Symlink Active Binary"
+  notify: traefik_restart
+  ansible.builtin.file:
+    src: "{{ _traefik_version_dir }}/{{ traefik_name }}"
+    dest: "{{ traefik_opt }}/{{ traefik_name }}"
+    state: link
+    # Existing hosts have /opt/traefik/traefik as a regular file from the old
+    # in-place extraction; force lets the symlink replace it on migration.
+    force: true
+    follow: false
+    owner: '{{ traefik_name }}'
+    group: '{{ traefik_name }}'
+
+- name: "List Installed Versions"
+  ansible.builtin.find:
+    paths: "{{ traefik_opt }}"
+    patterns: '{{ traefik_name }}-*-linux-{{ traefik_arch }}'
+    file_type: directory
+    recurse: false
+  register: traefik_installed_versions
+
+- name: "Compute Versions To Prune"
+  ansible.builtin.set_fact:
+    traefik_versions_to_prune: >-
+      {{
+        (
+          traefik_installed_versions.files
+          | sort(attribute='mtime', reverse=true)
+          | rejectattr('path', 'equalto', _traefik_version_dir)
+          | list
+        )[traefik_keep_versions:]
+      }}
+
+- name: "Prune Old Versions"
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop: "{{ traefik_versions_to_prune | map(attribute='path') | product(['', '.tar.gz']) | map('join') | list }}"
+  loop_control:
+    label: '{{ item }}'
 
 - name: "Create Config Folder"
   ansible.builtin.file:

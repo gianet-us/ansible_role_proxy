@@ -54,13 +54,23 @@ jobs:
             echo "Update available: $CURRENT -> $LATEST"
           fi
 
+          # PRs test the role itself, so always run Molecule regardless of
+          # whether traefik_version happens to match latest.
+          if [ "${{ github.event_name }}" = "pull_request" ] || [ "$LATEST" != "$CURRENT" ]; then
+            echo "run_tests=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run_tests=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Install Molecule
-        if: steps.check.outputs.needs_update == 'true'
-        run: pip install ansible molecule molecule-plugins[podman]
+        if: steps.check.outputs.run_tests == 'true'
+        # This runner is persistent, so --upgrade is needed or packages from
+        # earlier runs never get replaced.
+        run: pip install --upgrade ansible molecule molecule-plugins[podman]
 
       - name: Install Ansible collections
-        if: steps.check.outputs.needs_update == 'true'
-        run: ansible-galaxy collection install containers.podman
+        if: steps.check.outputs.run_tests == 'true'
+        run: ansible-galaxy collection install --upgrade containers.podman
 
       - name: Update traefik_version
         if: steps.check.outputs.needs_update == 'true'
@@ -75,9 +85,9 @@ jobs:
           echo "Verified: traefik_version updated to $UPDATED"
 
       - name: Run Molecule tests
-        if: steps.check.outputs.needs_update == 'true'
+        if: steps.check.outputs.run_tests == 'true'
         working-directory: ansible_role_proxy
-        run: molecule test     
+        run: molecule test
 
       - name: Commit and push
         if: steps.check.outputs.needs_update == 'true' && github.ref == 'refs/heads/main'
